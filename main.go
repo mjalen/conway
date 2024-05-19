@@ -1,27 +1,27 @@
 package main
 
 import (
-	"fmt";
-	"time";
-	"flag";
-	"net/http";
-	"conway-http/conway";
-	"embed";
+	"conway-http/conway"
+	"embed"
+	"flag"
+	"fmt"
 	"log"
+	"net/http"
+	"time"
 )
 
 type Game struct {
-	System conway.System2
-	Speed int	
+	System *conway.System
+	Speed  int
 }
 
 type SSEHandler struct {
 	channel chan string
-	game Game 
+	game    Game
 }
 
 //go:embed index.html
-var indexFile embed.FS 
+var indexFile embed.FS
 
 func (h *SSEHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/event-stream")
@@ -29,7 +29,7 @@ func (h *SSEHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Connection", "keep-alive")
 
 	log.Printf("Client has connected.")
-	h.channel = make(chan string) 
+	h.channel = make(chan string)
 
 	defer func() {
 		if h.channel != nil {
@@ -47,16 +47,16 @@ func (h *SSEHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	for {
-		output, newSystem := conway.RunSystem2(h.game.System) 
+		output, newSystem := conway.RunSystem(h.game.System)
 		h.game.System = newSystem
-		h.channel <- output 
+		h.channel <- output
 		time.Sleep(time.Duration(h.game.Speed) * time.Millisecond)
 	}
 }
 
 func main() {
 	game := new(Game)
-	game.System = *new(conway.System2)
+	game.System = new(conway.System)
 	flag.IntVar(&(game.Speed), "speed", 500, "Speed of the game.")
 	flag.IntVar(&(game.System.Size), "length", 32, "Length of the system.")
 	flag.Parse()
@@ -71,7 +71,7 @@ func main() {
 			fmt.Println(err)
 		}
 
-		fmt.Fprintf(w, string(content))
+		fmt.Fprintf(w, "%s", string(content))
 	})
 
 	log.Fatal("HTTP server error: ", http.ListenAndServe(":8080", nil))
