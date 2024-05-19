@@ -1,4 +1,4 @@
-module conway
+module conway-http 
 
 go 1.22.3
 

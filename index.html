@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Conway's Game of Life</title>
+		<script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2XoQrxeTUQyRjrOnlCoYta87iKBWq3EsdM2" crossorigin="anonymous"></script>
+		<script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/sse.js"></script>
+<style>
+#b {
+	height: 5px; 
+	width: 10px; 
+	border: 10px solid black;
+	margin: 2px;
+	white-space: nowrap;
+}
+
+#w {
+	height: 5px;
+	width: 10px; 
+	border: 10px solid white;
+	margin: 2px;
+	white-space: nowrap;
+}
+</style>
+	</head>
+
+	<body>
+		<div style="display: flex; justify-content: center">
+			<h1>Conway's Game of Life</h1>
+		</div>
+		<div style="display: flex; justify-content: center">
+			<div hx-ext="sse" sse-connect="/game" sse-swap="message">
+		</div>
+	</body>
+</html>
