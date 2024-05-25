@@ -6,7 +6,7 @@ import (
 	"slices"
 	"sync"
 
-	"conway-http/life/vector"
+	"github.com/mjalen/conway/life/vector"
 )
 
 type Rules struct {

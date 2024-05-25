@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	"conway-http/life"
+	"github.com/mjalen/conway/life"
 )
 
 type SSE struct {

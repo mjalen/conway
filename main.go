@@ -6,8 +6,8 @@ import (
 	"net/http"
 	_ "embed"
 
-	"conway-http/life"
-	"conway-http/handler"
+	"github.com/mjalen/conway/life"
+	"github.com/mjalen/conway/handler"
 )
 
 var (
