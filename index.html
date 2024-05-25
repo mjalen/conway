@@ -5,17 +5,35 @@
 		<script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2XoQrxeTUQyRjrOnlCoYta87iKBWq3EsdM2" crossorigin="anonymous"></script>
 		<script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/sse.js"></script>
 <style>
+:root {
+	--cell-size: 10px;
+}
+
+body {
+	background-color: white;
+}
+
+#game {
+	display: flex;
+	justify-content: center;
+	/* box-shadow: 5px 5px; */
+}
+
+#r {
+	display: inline-block;
+}
+
 #b {
-	/* position: absolute; */
-	border: 10px solid black;
-	white-space: nowrap;
-	margin: 2px;
+	height: 0;
+	width: var(--cell-size);
+	padding-bottom: var(--cell-size);
+	background-color: black;
 }
 #w {
-	/* position: absolute; */
-	border: 10px solid white;
-	white-space: nowrap;
-	margin: 2px;
+	height: 0;
+	width: var(--cell-size);
+	padding-bottom: var(--cell-size);
+	background-color: white;
 }
 </style>
 	</head>
@@ -24,8 +42,17 @@
 		<div style="display: flex; justify-content: center">
 			<h1>Conway's Game of Life</h1>
 		</div>
+
 		<div style="display: flex; justify-content: center">
-			<div hx-ext="sse" sse-connect="/game" sse-swap="message">
+			<button 
+				hx-get="/game/start" 
+				hx-trigger="click" 
+				hx-swap="outerHTML"
+				>
+				Start Game
+			</button>
 		</div>
+		
+
 	</body>
 </html>
