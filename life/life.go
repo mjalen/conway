@@ -1,7 +1,6 @@
 package life
 
 import (
-	"fmt"
 	"math/rand"
 	"slices"
 	"sync"
@@ -18,9 +17,10 @@ type System struct {
 	Alive []vector.Pair
 	Rules Rules
 	Size  int
+	Seed int64
 }
 
-func (s *System) contains(v vector.Pair) bool {
+func (s *System) Contains(v vector.Pair) bool {
 	for _, p := range s.Alive {
 		if p == v {
 			return true
@@ -44,7 +44,7 @@ func (s *System) GetAlive() []vector.Pair {
 func (s *System) CountAlive(ps []vector.Pair) int {
 	c := 0
 	for _, p := range ps {
-		if s.contains(p) {
+		if s.Contains(p) {
 			c++
 		}
 	}
@@ -72,7 +72,7 @@ func (s *System) Next() System {
 		ns := a.Neighbors(s.Size)
 		for _, p := range append(ns, a) {
 			mu.Lock()
-			checked := next.contains(p)
+			checked := next.Contains(p)
 			mu.Unlock()
 			if checked {
 				continue
@@ -81,7 +81,7 @@ func (s *System) Next() System {
 			wg.Add(1)
 			go func(p vector.Pair) {
 				c := s.CountAlive(p.Neighbors(s.Size))
-				isAlive := next.Rules.Check(s.contains(p), c)
+				isAlive := next.Rules.Check(s.Contains(p), c)
 				if isAlive {
 					mu.Lock()
 					next.append(p)
@@ -96,29 +96,11 @@ func (s *System) Next() System {
 	return next
 }
 
-func (s *System) ToHTML() string {
-	const blackBox string = "<div id='b'></div>"
-	const whiteBox string = "<div id='w'></div>"
-
-	var output string
-	for y := 0; y < s.Size; y++ {
-		output = fmt.Sprintf("%s<div id='r'>", output)
-		for x := 0; x < s.Size; x++ {
-			isAlive := s.contains(vector.Pair{X: x, Y: y})
-			if isAlive {
-				output = fmt.Sprintf("%s%s", output, blackBox)
-			} else {
-				output = fmt.Sprintf("%s%s", output, whiteBox)
-			}
-		}
-		output = fmt.Sprintf("%s</div>", output)
+func (s System) Random() System {
+	if s.Seed == 0 {
+		s.Seed = rand.Int63n(999999999)
 	}
-
-	return output
-}
-
-func (s System) Random(seed int64) System {
-	src := rand.New(rand.NewSource(seed))
+	src := rand.New(rand.NewSource(s.Seed))
 	for y := 0; y < s.Size; y++ {
 		for x := 0; x < s.Size; x++ {
 			if src.Intn(2) == 1 {

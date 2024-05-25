@@ -1,0 +1,59 @@
+package frontend
+
+css center() {
+	display: flex;
+	justify-content: center;
+}
+
+templ Index() {
+	<!DOCTYPE html>
+	<html>
+		<head>
+			<title>Life-Like Cellular Automata</title>
+			<script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2XoQrxeTUQyRjrOnlCoYta87iKBWq3EsdM2" crossorigin="anonymous"></script>
+			<script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/sse.js"></script>
+	<style>
+	:root {
+		--cell-size: 20px;
+	}
+
+	body {
+		background-color: white;
+	}
+
+	#r {
+		display: inline-block;
+	}
+
+	#b {
+		height: 0;
+		width: var(--cell-size);
+		padding-bottom: var(--cell-size);
+		background-color: black;
+	}
+	#w {
+		height: 0;
+		width: var(--cell-size);
+		padding-bottom: var(--cell-size);
+		background-color: white;
+	}
+	</style>
+		</head>
+
+		<body>
+			<div class={ templ.KV(center(), true) }>
+				<h1>Life-Like Cellular Automata</h1>
+			</div>
+
+			<div class={ templ.KV(center(), true) }>
+				<button 
+					hx-post="/life/start" 
+					hx-trigger="" 
+					hx-swap="outerHTML"
+					>
+					Start Game
+				</button>
+			</div>
+		</body>
+	</html>
+}

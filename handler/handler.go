@@ -5,8 +5,9 @@ import (
 	"log"
 	"time"
 	"fmt"
-	"math/rand"
+	"context"
 
+	"github.com/mjalen/conway/frontend"
 	"github.com/mjalen/conway/life"
 )
 
@@ -15,10 +16,6 @@ type SSE struct {
 	Size  int
 	Rules life.Rules
 	Seed  int64
-}
-
-type HTML struct {
-	Content string
 }
 
 func (h *SSE) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +36,10 @@ func (h *SSE) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	go func() {
 		for s := range render {
-			fmt.Fprintf(w, "data: %s\n\n", s.ToHTML())
+			fmt.Fprintf(w, "data: ")
+			frontend.Board(s).Render(context.Background(), w)
+			fmt.Fprintf(w, "\n\n")
+
 			w.(http.Flusher).Flush()
 			time.Sleep(time.Duration(h.Speed) * time.Millisecond)
 		}
@@ -48,31 +48,14 @@ func (h *SSE) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s := life.System{
 		Rules: h.Rules,
 		Size:  h.Size,
+		Seed: h.Seed,
 	}
-	h.Seed = rand.Int63n(9999999999999999)
-	log.Printf("Seed: %v", h.Seed)
 	for {
 		if len(s.Alive) == 0 {
-			s = s.Random(h.Seed)
+			s = s.Random()
+			log.Printf("Seed: %v", s.Seed)
 		}
 		render <- &s
 		s = s.Next()
 	}
-}
-
-func (h *HTML) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	/*
-	content, err := h.Filesystem.ReadFile(fmt.Sprintf("../%s", h.File))
-
-	if err != nil {
-		fmt.Println(err)
-		w.WriteHeader(404)
-	}
-	*/
-
-	if len(h.Content) == 0 {
-		w.WriteHeader(404)
-	}
-
-	fmt.Fprintf(w, "%s", h.Content)
 }
