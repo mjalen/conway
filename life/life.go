@@ -1,22 +1,13 @@
 package life
 
-// Any live cell with fewer than two live neighbors dies, as if by underpopulation. -> false
-// Any live cell with more than three live neighbors dies, as if by overpopulation. -> false
-
-// Any live cell with two or three live neighbors lives on to the next generation. -> true
-// Any dead cell with exactly three live neighbors becomes a live cell, as if by reproduction. -> true
-
 import (
 	"fmt"
 	"math/rand"
 	"slices"
 	"sync"
-)
 
-type Pair struct {
-	X int
-	Y int
-}
+	"conway-http/life/vector"
+)
 
 type Rules struct {
 	Birth   []int
@@ -24,61 +15,33 @@ type Rules struct {
 }
 
 type System struct {
-	Alive []Pair
+	Alive []vector.Pair
 	Rules Rules
 	Size  int
 }
 
-func (s *System) contains(pair Pair) bool {
+func (s *System) contains(v vector.Pair) bool {
 	for _, p := range s.Alive {
-		if p == pair {
+		if p == v {
 			return true
 		}
 	}
-
 	return false
 }
 
-func (s *System) append(ps ...Pair) {
+func (s *System) append(ps ...vector.Pair) {
 	s.Alive = append(s.Alive, ps...)
 }
 
-func Wrap(val int, min int, max int) int {
-	if val < min {
-		return max - 1
-	}
-
-	if val >= max {
-		return min
-	}
-
-	return val
+func (s *System) GetSize() int {
+	return s.Size
 }
 
-func (p *Pair) Wrap(min Pair, max Pair) Pair {
-	return Pair{
-		X: Wrap(p.X, min.X, max.X),
-		Y: Wrap(p.Y, min.Y, max.Y),
-	}
+func (s *System) GetAlive() []vector.Pair {
+	return s.Alive
 }
 
-func (p *Pair) Neighbors(s *System) []Pair { // for now, this INCLUDES p in the neighborhood.
-	var n []Pair
-
-	for y := (p.Y - 1); y <= (p.Y + 1); y++ {
-		for x := (p.X - 1); x <= (p.X + 1); x++ {
-			if p.X == x && p.Y == y {
-				continue
-			}
-			wrap := (&Pair{x, y}).Wrap(Pair{0, 0}, Pair{s.Size, s.Size})
-			n = append(n, wrap)
-		}
-	}
-
-	return n
-}
-
-func (s *System) CountAlive(ps []Pair) int {
+func (s *System) CountAlive(ps []vector.Pair) int {
 	c := 0
 	for _, p := range ps {
 		if s.contains(p) {
@@ -96,7 +59,7 @@ func (r *Rules) Check(alive bool, neighbors int) bool {
 	return slices.Contains(r.Birth, neighbors)
 }
 
-func (s *System) Next() System { // perhaps add error handling for empty systems
+func (s *System) Next() System {
 	next := System{
 		Rules: s.Rules,
 		Size:  s.Size,
@@ -106,7 +69,7 @@ func (s *System) Next() System { // perhaps add error handling for empty systems
 	var wg sync.WaitGroup
 
 	for _, a := range s.Alive {
-		ns := a.Neighbors(s)
+		ns := a.Neighbors(s.Size)
 		for _, p := range append(ns, a) {
 			mu.Lock()
 			checked := next.contains(p)
@@ -116,8 +79,8 @@ func (s *System) Next() System { // perhaps add error handling for empty systems
 			}
 
 			wg.Add(1)
-			go func(p Pair) {
-				c := s.CountAlive(p.Neighbors(s))
+			go func(p vector.Pair) {
+				c := s.CountAlive(p.Neighbors(s.Size))
 				isAlive := next.Rules.Check(s.contains(p), c)
 				if isAlive {
 					mu.Lock()
@@ -128,24 +91,6 @@ func (s *System) Next() System { // perhaps add error handling for empty systems
 			}(p)
 		}
 	}
-
-	/*
-		for y := 0; y < s.Size; y++ {
-			for x := 0; x < s.Size; x++ {
-				wg.Add(1)
-				go func(p Pair) {
-					c := s.CountAlive(p.Neighbors(s))
-					isAlive := next.Rules.Check(s.contains(p), c)
-					if isAlive {
-						mu.Lock()
-						next.append(p)
-						mu.Unlock()
-					}
-					wg.Done()
-				}(Pair{x,y})
-			}
-		}
-	*/
 
 	wg.Wait()
 	return next
@@ -159,8 +104,7 @@ func (s *System) ToHTML() string {
 	for y := 0; y < s.Size; y++ {
 		output = fmt.Sprintf("%s<div id='r'>", output)
 		for x := 0; x < s.Size; x++ {
-			p := Pair{x, y}
-			isAlive := s.contains(p)
+			isAlive := s.contains(vector.Pair{X: x, Y: y})
 			if isAlive {
 				output = fmt.Sprintf("%s%s", output, blackBox)
 			} else {
@@ -178,7 +122,7 @@ func (s System) Random(seed int64) System {
 	for y := 0; y < s.Size; y++ {
 		for x := 0; x < s.Size; x++ {
 			if src.Intn(2) == 1 {
-				s.append(Pair{x, y})
+				s.append(vector.Pair{X: x, Y: y})
 			}
 		}
 	}
@@ -186,7 +130,7 @@ func (s System) Random(seed int64) System {
 	return s
 }
 
-func (s System) Inject(ps ...Pair) System {
+func (s System) Inject(ps ...vector.Pair) System {
 	s.Alive = ps
 	return s
 }
